@@ -60,4 +60,4 @@ Para executar o projeto é necessário possuir:
 Clone o repositório:
 
 ```bash
-git clone LINK_DO_REPOSITORIO
+git clone https://github.com/ClaitonCaio/CompilaRef.git
