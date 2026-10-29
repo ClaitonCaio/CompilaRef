@@ -61,7 +61,7 @@ Clone o repositório:
 
 ```bash
 git clone https://github.com/ClaitonCaio/CompilaRef.git
-
+```
 
 ## Etapa 2 — Interface Web e Entrada de Código-Fonte
 
