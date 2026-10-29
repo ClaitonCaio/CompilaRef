@@ -1,13 +1,120 @@
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
+
+/* Estilo geral */
+* {
+    box-sizing: border-box;
 }
 
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 30px 15px;
+    color: #333;
+}
+
+/* Conteúdo principal */
 .container {
-    width: 600px;
-    margin: 100px auto;
-    text-align: center;
+    max-width: 850px;
+    margin: 0 auto;
     background: white;
-    padding: 40px;
-    border-radius: 10px;
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Títulos */
+h1 {
+    color: #2563eb;
+    text-align: center;
+    margin-top: 0;
+}
+
+h2 {
+    color: #333;
+    margin-top: 25px;
+}
+
+p {
+    line-height: 1.6;
+}
+
+/* Campos de entrada */
+label {
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+textarea {
+    font-family: Consolas, monospace;
+    margin-top: 5px;
+    resize: vertical;
+    min-height: 180px;
+}
+
+select:focus, textarea:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+/* Botão de análise */
+button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 13px 22px;
+    margin-top: 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1d4ed8;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Área de resultados */
+#resultado {
+    background-color: #f1f5f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: Consolas, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    min-height: 60px;
+}
+
+#mensagem {
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    body {
+        padding: 15px 10px;
+    }
+
+    button {
+        width: 100%;
+    }
 }

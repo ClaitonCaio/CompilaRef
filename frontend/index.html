@@ -1,21 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CompilaRef</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <div class="container">
+
         <h1>CompilaRef</h1>
-
         <p>Software educacional para o ensino de análise léxica.</p>
+        <p><strong>Linguagem:</strong> Python simplificado</p>
 
-        <h2 id="mensagem">Carregando...</h2>
+        <hr>
+
+        <h2>Entrada de código-fonte</h2>
+
+        <label for="exemplos">Escolha um exemplo:</label>
+        <select id="exemplos">
+            <option value="">Selecione um exemplo</option>
+            <option value="1">Exemplo 1 - Atribuição</option>
+            <option value="2">Exemplo 2 - Operação aritmética</option>
+            <option value="3">Exemplo 3 - Expressão com parênteses</option>
+        </select>
+
+        <label for="codigo">Digite seu código:</label>
+        <textarea id="codigo" rows="10"
+                  placeholder="Digite seu código Python aqui..."></textarea>
+
+        <button id="analisar" type="button">
+            Analisar código
+        </button>
+
+        <hr>
+
+        <h2>Resultado</h2>
+        <p id="mensagem" aria-live="polite">Carregando...</p>
+        <pre id="resultado">Nenhuma análise solicitada.</pre>
+
     </div>
 
     <script src="script.js"></script>
 
 </body>
-
 </html>
