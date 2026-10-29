@@ -37,9 +37,54 @@
 
         <hr>
 
-        <h2>Resultado</h2>
-        <p id="mensagem" aria-live="polite">Carregando...</p>
-        <pre id="resultado">Nenhuma análise solicitada.</pre>
+       
+<h2>Resultado da análise léxica</h2>
+
+<p id="mensagem" aria-live="polite">
+    Aguardando análise do código.
+</p>
+
+<p>
+    <strong>Token:</strong> categoria de um elemento
+    reconhecido pelo analisador léxico.
+</p>
+
+<p>
+    <strong>Lexema:</strong> texto original identificado
+    no código-fonte.
+</p>
+
+<h3>Tokens identificados</h3>
+
+<div class="tabela-container">
+    <table id="tabela-tokens">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Lexema</th>
+                <th>Linha</th>
+                <th>Coluna</th>
+            </tr>
+        </thead>
+
+        <tbody id="corpo-tokens">
+            <tr>
+                <td colspan="4">
+                    Nenhuma análise realizada.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<section id="secao-erros" hidden>
+    <h3>Erros léxicos</h3>
+    <ul id="lista-erros"></ul>
+</section>
+
+<h3>Código enviado</h3>
+<pre id="resultado">Nenhuma análise solicitada.</pre>
+
 
     </div>
 

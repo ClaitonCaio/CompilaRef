@@ -118,3 +118,108 @@ button:disabled {
         width: 100%;
     }
 }
+
+/* Tabela de tokens */
+
+.tabela-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+#tabela-tokens {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+}
+
+#tabela-tokens thead {
+    background-color: #2563eb;
+    color: white;
+}
+
+#tabela-tokens th {
+    padding: 14px;
+    font-weight: bold;
+}
+
+#tabela-tokens td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#tabela-tokens tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+#tabela-tokens tbody tr:hover {
+    background-color: #eff6ff;
+}
+
+#tabela-tokens td:nth-child(2) {
+    font-family: Consolas, monospace;
+    font-weight: bold;
+}
+
+/* Mensagens de erros léxicos */
+
+#secao-erros {
+    margin-top: 25px;
+    padding: 18px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+}
+
+#secao-erros[hidden] {
+    display: none;
+}
+
+#secao-erros h3 {
+    color: #b91c1c;
+    margin-top: 0;
+}
+
+#lista-erros {
+    padding-left: 22px;
+    color: #991b1b;
+}
+
+#lista-erros li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+/* Organização dos resultados */
+
+h3 {
+    margin-top: 25px;
+    color: #334155;
+}
+
+#corpo-tokens td[colspan] {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Responsividade */
+
+@media (max-width: 600px) {
+    #tabela-tokens {
+        min-width: 520px;
+    }
+
+    #tabela-tokens th,
+    #tabela-tokens td {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    #secao-erros {
+        padding: 12px;
+    }
+}

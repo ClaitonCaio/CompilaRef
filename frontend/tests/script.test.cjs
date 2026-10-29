@@ -10,28 +10,61 @@ const script = fs.readFileSync(
     "utf8"
 );
 
-function prepararInterface(respostaFetch) {
-    function elemento() {
-        return {
-            value: "",
-            textContent: "",
-            disabled: false,
-            style: {},
-            eventos: {},
-            addEventListener(nome, funcao) {
-                this.eventos[nome] = funcao;
-            },
-            focus() {}
-        };
-    }
+// Simula os elementos HTML da interface
+function criarElemento() {
+    let texto = "";
 
-    const elementos = {
-        codigo: elemento(),
-        exemplos: elemento(),
-        analisar: elemento(),
-        mensagem: elemento(),
-        resultado: elemento()
+    return {
+        value: "",
+        disabled: false,
+        hidden: false,
+        style: {},
+        children: [],
+        eventos: {},
+
+        get textContent() {
+            return texto;
+        },
+
+        set textContent(valor) {
+            texto = String(valor);
+            this.children = [];
+        },
+
+        appendChild(elemento) {
+            this.children.push(elemento);
+        },
+
+        addEventListener(nome, funcao) {
+            this.eventos[nome] = funcao;
+        },
+
+        focus() {
+            this.focado = true;
+        }
     };
+}
+
+// Prepara a interface para os testes
+function prepararInterface(respostaFetch) {
+    const ids = [
+        "codigo",
+        "exemplos",
+        "analisar",
+        "mensagem",
+        "resultado",
+        "corpo-tokens",
+        "secao-erros",
+        "lista-erros"
+    ];
+
+    const elementos = {};
+
+    ids.forEach(id => {
+        elementos[id] = criarElemento();
+    });
+
+    elementos["secao-erros"].hidden = true;
 
     let inicializar;
 
@@ -41,8 +74,13 @@ function prepararInterface(respostaFetch) {
                 inicializar = funcao;
             }
         },
+
         getElementById(id) {
             return elementos[id];
+        },
+
+        createElement() {
+            return criarElemento();
         }
     };
 
@@ -56,14 +94,18 @@ function prepararInterface(respostaFetch) {
     vm.runInNewContext(script, {
         document,
         window,
-        fetch: respostaFetch
+        fetch: respostaFetch || (async () => {
+            throw new Error("Servidor indisponível");
+        })
     });
 
     inicializar();
+
     return elementos;
 }
 
-test("Carrega os tres exemplos", () => {
+// TESTE 1
+test("Carrega os tres exemplos de Python", () => {
     const tela = prepararInterface();
 
     const exemplos = {
@@ -80,6 +122,7 @@ test("Carrega os tres exemplos", () => {
     }
 });
 
+// TESTE 2
 test("Permite editar o codigo", () => {
     const tela = prepararInterface();
 
@@ -88,71 +131,277 @@ test("Permite editar o codigo", () => {
     assert.equal(tela.codigo.value, "numero = 100");
 });
 
-test("Impede o envio de codigo vazio", async () => {
-    let enviou = false;
+// TESTE 3
+test("Impede envio de codigo vazio ou espacos", async () => {
+    let chamadas = 0;
 
     const tela = prepararInterface(async () => {
-        enviou = true;
+        chamadas++;
     });
 
-    tela.codigo.value = "   ";
-    await tela.analisar.eventos.click();
+    for (const entrada of ["", "   ", "\n\t"]) {
+        tela.codigo.value = entrada;
 
-    assert.equal(enviou, false);
-    assert.match(tela.mensagem.textContent, /Informe um código/);
+        await tela.analisar.eventos.click();
+
+        assert.match(
+            tela.mensagem.textContent,
+            /Informe um código-fonte/
+        );
+    }
+
+    assert.equal(chamadas, 0);
 });
 
-test("Envia o codigo ao backend", async () => {
-    let dadosEnviados;
+// TESTE 4
+test("Envia codigo e exibe os tokens na tabela", async () => {
+    const tela = prepararInterface(async () => ({
+        ok: true,
 
-    const tela = prepararInterface(async (url, opcoes) => {
-        dadosEnviados = JSON.parse(opcoes.body);
-
-        return {
-            ok: true,
-            async json() {
-                return {
-                    mensagem: "Código recebido com sucesso!",
-                    recebido: true
-                };
-            }
-        };
-    });
+        async json() {
+            return {
+                mensagem: "Análise léxica concluída com sucesso!",
+                sucesso: true,
+                tokens: [
+                    {
+                        tipo: "IDENTIFICADOR",
+                        lexema: "idade",
+                        linha: 1,
+                        coluna: 1
+                    },
+                    {
+                        tipo: "OPERADOR",
+                        lexema: "=",
+                        linha: 1,
+                        coluna: 7
+                    },
+                    {
+                        tipo: "LITERAL_INTEIRO",
+                        lexema: "20",
+                        linha: 1,
+                        coluna: 9
+                    }
+                ],
+                erros: []
+            };
+        }
+    }));
 
     tela.codigo.value = "idade = 20";
+
     await tela.analisar.eventos.click();
 
-    assert.equal(dadosEnviados.codigo, "idade = 20");
-    assert.match(tela.mensagem.textContent, /sucesso/);
+    const linhas = tela["corpo-tokens"].children;
+
+    assert.equal(linhas.length, 3);
+
+    assert.equal(
+        linhas[0].children[0].textContent,
+        "IDENTIFICADOR"
+    );
+
+    assert.equal(
+        linhas[0].children[1].textContent,
+        "idade"
+    );
+
+    assert.equal(
+        linhas[0].children[2].textContent,
+        "1"
+    );
+
+    assert.equal(
+        linhas[0].children[3].textContent,
+        "1"
+    );
+
+    assert.match(
+        tela.mensagem.textContent,
+        /sucesso/
+    );
+
     assert.equal(tela.analisar.disabled, false);
 });
 
-test("Mostra erro quando o servidor falha", async () => {
+// TESTE 5
+test("Exibe erros lexicos e continua mostrando tokens", async () => {
+    const tela = prepararInterface(async () => ({
+        ok: true,
+
+        async json() {
+            return {
+                mensagem: "Análise concluída com erros léxicos.",
+                sucesso: false,
+                tokens: [
+                    {
+                        tipo: "IDENTIFICADOR",
+                        lexema: "idade",
+                        linha: 1,
+                        coluna: 1
+                    },
+                    {
+                        tipo: "LITERAL_INTEIRO",
+                        lexema: "20",
+                        linha: 1,
+                        coluna: 9
+                    }
+                ],
+                erros: [
+                    {
+                        tipo: "ERRO_LEXICO",
+                        lexema: "@",
+                        linha: 1,
+                        coluna: 7,
+                        mensagem: "Caractere não reconhecido: '@'"
+                    }
+                ]
+            };
+        }
+    }));
+
+    tela.codigo.value = "idade @ 20";
+
+    await tela.analisar.eventos.click();
+
+    assert.equal(
+        tela["corpo-tokens"].children.length,
+        2
+    );
+
+    assert.equal(
+        tela["secao-erros"].hidden,
+        false
+    );
+
+    assert.match(
+        tela["lista-erros"].children[0].textContent,
+        /Linha 1, coluna 7/
+    );
+
+    assert.match(
+        tela["lista-erros"].children[0].textContent,
+        /@/
+    );
+});
+
+// TESTE 6
+test("Mostra mensagem quando servidor falha", async () => {
     const tela = prepararInterface(async () => {
-        throw new Error("Servidor indisponivel");
+        throw new Error("Falha de conexão");
     });
 
     tela.codigo.value = "idade = 20";
+
     await tela.analisar.eventos.click();
 
     assert.match(
         tela.mensagem.textContent,
         /Não foi possível comunicar/
     );
+
     assert.equal(tela.analisar.disabled, false);
 });
 
-test("Mostra erro quando o backend rejeita a entrada", async () => {
+// TESTE 7
+test("Trata resposta HTTP de erro", async () => {
     const tela = prepararInterface(async () => ({
         ok: false,
+
         async json() {
-            return { mensagem: "Requisição inválida." };
+            return {
+                mensagem: "Requisição inválida."
+            };
         }
     }));
 
     tela.codigo.value = "idade = 20";
+
     await tela.analisar.eventos.click();
 
-    assert.equal(tela.mensagem.textContent, "Requisição inválida.");
+    assert.equal(
+        tela.mensagem.textContent,
+        "Requisição inválida."
+    );
+
     assert.equal(tela.analisar.disabled, false);
+});
+
+// TESTE 8
+test("Mostra mensagem quando nao existem tokens", async () => {
+    const tela = prepararInterface(async () => ({
+        ok: true,
+
+        async json() {
+            return {
+                mensagem: "Análise léxica concluída com sucesso!",
+                sucesso: true,
+                tokens: [],
+                erros: []
+            };
+        }
+    }));
+
+    tela.codigo.value = "# comentario";
+
+    await tela.analisar.eventos.click();
+
+    const linhas = tela["corpo-tokens"].children;
+
+    assert.equal(linhas.length, 1);
+
+    assert.match(
+        linhas[0].children[0].textContent,
+        /Nenhum token identificado/
+    );
+});
+
+// TESTE 9
+test("Limpa resultados ao selecionar outro exemplo", async () => {
+    const tela = prepararInterface(async () => ({
+        ok: true,
+
+        async json() {
+            return {
+                mensagem: "Análise concluída com erros léxicos.",
+                sucesso: false,
+                tokens: [
+                    {
+                        tipo: "IDENTIFICADOR",
+                        lexema: "idade",
+                        linha: 1,
+                        coluna: 1
+                    }
+                ],
+                erros: [
+                    {
+                        linha: 1,
+                        coluna: 7,
+                        mensagem: "Caractere não reconhecido."
+                    }
+                ]
+            };
+        }
+    }));
+
+    tela.codigo.value = "idade @";
+
+    await tela.analisar.eventos.click();
+
+    tela.exemplos.value = "2";
+    tela.exemplos.eventos.change();
+
+    assert.equal(
+        tela.codigo.value,
+        "resultado = 10 + 5"
+    );
+
+    assert.equal(
+        tela["corpo-tokens"].children.length,
+        0
+    );
+
+    assert.equal(
+        tela["secao-erros"].hidden,
+        true
+    );
 });
