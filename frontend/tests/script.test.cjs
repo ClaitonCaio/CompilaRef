@@ -55,7 +55,8 @@ function prepararInterface(respostaFetch) {
         "resultado",
         "corpo-tokens",
         "secao-erros",
-        "lista-erros"
+        "lista-erros",
+        "arvore-ast", "estado-sintatico", "secao-erros-sintaticos", "lista-erros-sintaticos"
     ];
 
     const elementos = {};
@@ -120,6 +121,33 @@ test("Carrega os tres exemplos de Python", () => {
 
         assert.equal(tela.codigo.value, codigo);
     }
+});
+
+test("Exibe AST hierárquica e erro sintático em análises distintas", async () => {
+    let sintatico = {
+        sucesso: true, erros: [],
+        ast: { tipo: "PROGRAMA", linha: 1, coluna: 1, atributos: {}, filhos: [
+            { tipo: "ATRIBUICAO", linha: 1, coluna: 1, atributos: {}, filhos: [
+                { tipo: "IDENTIFICADOR", linha: 1, coluna: 1, atributos: { nome: "x" }, filhos: [] },
+                { tipo: "LITERAL", linha: 1, coluna: 5, atributos: { valor: "2" }, filhos: [] }
+            ] }
+        ] }
+    };
+    const tela = prepararInterface(async () => ({
+        ok: true,
+        async json() { return { mensagem: "Análise concluída", sucesso: true, tokens: [], erros: [], sintatico }; }
+    }));
+    tela.codigo.value = "x = 2";
+    await tela.analisar.eventos.click();
+    assert.equal(tela["arvore-ast"].children.length, 1);
+    assert.match(tela["arvore-ast"].children[0].children[0].children[0].children[0].textContent, /PROGRAMA/);
+    sintatico = { sucesso: false, ast: null, erros: [
+        { linha: 1, coluna: 5, mensagem: "Falta uma expressão." }
+    ] };
+    await tela.analisar.eventos.click();
+    assert.equal(tela["arvore-ast"].children.length, 0);
+    assert.equal(tela["secao-erros-sintaticos"].hidden, false);
+    assert.match(tela["lista-erros-sintaticos"].children[0].textContent, /Linha 1, coluna 5/);
 });
 
 // TESTE 2

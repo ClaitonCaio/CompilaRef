@@ -11,12 +11,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const corpoTokens = document.getElementById("corpo-tokens");
     const secaoErros = document.getElementById("secao-erros");
     const listaErros = document.getElementById("lista-erros");
+    const arvoreAst = document.getElementById("arvore-ast");
+    const estadoSintatico = document.getElementById("estado-sintatico");
+    const secaoErrosSintaticos = document.getElementById("secao-erros-sintaticos");
+    const listaErrosSintaticos = document.getElementById("lista-erros-sintaticos");
 
     // Exemplos em Python simplificado
     const programas = {
         "1": "idade = 20",
         "2": "resultado = 10 + 5",
-        "3": "total = (10 + 5) * 2"
+        "3": "total = (10 + 5) * 2",
+        "4": "idade = 20\nif idade >= 18:\n    categoria = 'adulto'\nelse:\n    categoria = 'menor'"
     };
 
     mensagem.textContent = "Insira um código ou selecione um exemplo.";
@@ -90,6 +95,61 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function limparSintatico() {
+        if (arvoreAst) arvoreAst.textContent = "";
+        if (estadoSintatico) estadoSintatico.textContent = "Nenhuma análise sintática realizada.";
+        if (listaErrosSintaticos) listaErrosSintaticos.textContent = "";
+        if (secaoErrosSintaticos) secaoErrosSintaticos.hidden = true;
+    }
+
+    function criarNoAst(no) {
+        const item = document.createElement("li");
+        const descricao = no.tipo +
+            (no.atributos?.operador ? ` (${no.atributos.operador})` : "") +
+            (no.atributos?.nome ? `: ${no.atributos.nome}` : "") +
+            (no.atributos?.valor ? `: ${no.atributos.valor}` : "") +
+            ` — linha ${no.linha}, coluna ${no.coluna}`;
+        if (no.filhos?.length) {
+            const detalhes = document.createElement("details");
+            detalhes.open = true;
+            const resumo = document.createElement("summary");
+            resumo.textContent = descricao;
+            const lista = document.createElement("ul");
+            no.filhos.forEach(filho => lista.appendChild(criarNoAst(filho)));
+            detalhes.appendChild(resumo);
+            detalhes.appendChild(lista);
+            item.appendChild(detalhes);
+        } else {
+            item.textContent = descricao;
+        }
+        return item;
+    }
+
+    function mostrarSintatico(sintatico) {
+        limparSintatico();
+        if (!sintatico || !estadoSintatico) return;
+        if (sintatico.ignorado) {
+            estadoSintatico.textContent = "Análise sintática não executada devido a erros léxicos.";
+        } else if (sintatico.sucesso && sintatico.ast) {
+            estadoSintatico.textContent = "Estrutura válida. AST construída pelo parser:";
+            if (arvoreAst) {
+                const lista = document.createElement("ul");
+                lista.appendChild(criarNoAst(sintatico.ast));
+                arvoreAst.appendChild(lista);
+            }
+        } else {
+            estadoSintatico.textContent = "A estrutura do código contém erro sintático.";
+            if (secaoErrosSintaticos && listaErrosSintaticos) {
+                secaoErrosSintaticos.hidden = false;
+                (sintatico.erros || []).forEach(erro => {
+                    const item = document.createElement("li");
+                    item.textContent = `Linha ${erro.linha}, coluna ${erro.coluna}: ${erro.mensagem}`;
+                    listaErrosSintaticos.appendChild(item);
+                });
+            }
+        }
+    }
+
     // Carregar os exemplos no editor
     exemplos.addEventListener("change", () => {
         const exemplo = programas[exemplos.value];
@@ -107,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             limparTabela();
             mostrarErros([]);
+            limparSintatico();
         }
     });
 
@@ -126,6 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             limparTabela();
             mostrarErros([]);
+            limparSintatico();
 
             codigo.focus();
             return;
@@ -142,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         limparTabela();
         mostrarErros([]);
+        limparSintatico();
 
         try {
             const endereco =
@@ -188,9 +251,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Apresentar os erros
             mostrarErros(erros);
+            mostrarSintatico(dados.sintatico);
 
             // Mostrar o resultado da análise
-            if (dados.sucesso === false || erros.length > 0) {
+            if (dados.sucesso === false || erros.length > 0 || dados.sintatico?.sucesso === false) {
                 mensagem.textContent =
                     dados.mensagem ||
                     "Análise concluída com erros léxicos.";
@@ -223,6 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             limparTabela();
             mostrarErros([]);
+            limparSintatico();
 
         } finally {
             botao.disabled = false;

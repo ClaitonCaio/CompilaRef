@@ -376,5 +376,58 @@ estrutura sintática e não realiza análise semântica.
 A indentação é ignorada pelo scanner atual, e algumas
 construções da linguagem Python ainda não são suportadas.
 
-A análise sintática será desenvolvida na Etapa 4,
+A análise sintática foi desenvolvida na Etapa 4,
 aproveitando os tokens produzidos pelo scanner.
+
+## Etapa 4 — Análise sintática e AST
+
+A [gramática EBNF e o formato da AST](docs/GRAMATICA.md) documentam o
+subconjunto de Python, terminais, precedência, exemplos e limitações. O parser
+descendente recursivo é manual e usa os tokens do scanner da Etapa 3; linhas e
+indentação são inferidas das posições e do código original. Não há dependências
+novas. Erros léxicos impedem a execução do parser. Erros sintáticos retornam
+o primeiro diagnóstico com linha e coluna, sem interromper a aplicação.
+
+Exemplo válido:
+
+```python
+resultado = 10 + 5 * 2
+if resultado >= 20:
+    classe = "alta"
+else:
+    classe = "baixa"
+```
+
+Exemplos inválidos: `resultado = 10 +` (operando ausente), `if True:`
+(bloco ausente) e `else:` (sem `if`). A interface exibe tokens e uma AST
+hierárquica expansível, ou o erro sintático localizado.
+
+### Contrato de `POST /analisar`
+
+O corpo permanece `{"codigo": "x = 2 + 3"}`. A resposta HTTP 200 preserva
+`mensagem`, `recebido`, `codigo`, `sucesso`, `tokens` e `erros`, e acrescenta
+`lexico: {sucesso, tokens, erros}` e `sintatico: {sucesso, ast, erros}`.
+`sucesso` e `erros` na raiz continuam sendo os resultados **léxicos** para
+compatibilidade. `sintatico.ast` é um nó `PROGRAMA` em JSON, com `tipo`,
+`linha`, `coluna`, `linha_fim`, `coluna_fim`, `atributos` e `filhos`.
+Em erro sintático, `ast` é `null` e cada erro traz `tipo`, `linha`, `coluna`,
+`encontrado`, `esperado` e `mensagem`. Em erro léxico, `sintatico` contém
+`ignorado: true`, `ast: null` e `erros: []`. Entrada inválida, vazia ou maior
+que 10.000 caracteres recebe HTTP 400.
+
+### Execução e testes
+
+Com Docker Desktop ativo, execute `docker compose up -d --build` e abra
+`http://localhost:8080`. Selecione o exemplo 4 e verifique os tokens e a
+árvore. Envie `resultado = 10 +` para observar um diagnóstico.
+
+```text
+docker compose exec backend python -m unittest discover -s tests -p "test_*.py" -v
+node --test frontend/tests/script.test.cjs
+docker compose ps
+```
+
+Os testes de integração antigos exigem o backend ativo na porta 5000.
+Veja [o registro de testes](docs/REGISTRO_TESTES.md). A análise semântica,
+funções e execução não estão implementadas; a AST servirá de base para a
+Etapa 5. A integração com Ollama é opcional e não integra esta versão.

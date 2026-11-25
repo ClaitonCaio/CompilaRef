@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from scanner import analisar_lexico
+from parser import analisar_sintatico
 
 app = Flask(__name__)
 CORS(app)
@@ -44,12 +45,23 @@ def analisar():
             "recebido": False
         }), 400
 
+    if len(codigo) > 10000:
+        return jsonify({
+            "mensagem": "O código deve ter no máximo 10.000 caracteres.",
+            "recebido": False
+        }), 400
+
     # Executar o scanner
     resultado = analisar_lexico(codigo)
+    sintatico = (analisar_sintatico(resultado["tokens"], codigo)
+                 if resultado["sucesso"] else
+                 {"sucesso": False, "ast": None, "erros": [], "ignorado": True})
 
     # Verificar se houve erros léxicos
-    if resultado["sucesso"]:
-        mensagem = "Análise léxica concluída com sucesso!"
+    if resultado["sucesso"] and sintatico["sucesso"]:
+        mensagem = "Análises léxica e sintática concluídas com sucesso!"
+    elif resultado["sucesso"]:
+        mensagem = "Análise sintática concluída com erro."
     else:
         mensagem = "Análise concluída com erros léxicos."
 
@@ -60,7 +72,9 @@ def analisar():
         "codigo": codigo,
         "sucesso": resultado["sucesso"],
         "tokens": resultado["tokens"],
-        "erros": resultado["erros"]
+        "erros": resultado["erros"],
+        "lexico": resultado,
+        "sintatico": sintatico
     }), 200
 
 

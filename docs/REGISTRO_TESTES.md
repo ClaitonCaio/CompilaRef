@@ -218,3 +218,35 @@ simulações do DOM e das respostas HTTP.
 
 A implementação será ampliada nas próximas
 etapas do desenvolvimento.
+# Registro da Etapa 4 (24/11/2026)
+
+- Parser e scanner: `python -m unittest discover -s tests -p test_parser.py -v`
+  e `test_scanner.py`: 6 e 15 testes aprovados, respectivamente, com Python 3.12.
+- Interface: `node --test frontend/tests/script.test.cjs`: 10 testes aprovados.
+- API Flask e testes de integração HTTP: não executados neste ambiente.
+  A instalação de Flask pelo pip não encontrou pacotes disponíveis; o Docker
+  Desktop não estava ativo e a rede local do executor bloqueou sockets.
+- Docker Compose e fluxo de ponta a ponta: pendentes de execução com o daemon
+  Docker ativo no computador do aluno. Executar os comandos do README.
+
+O erro encontrado ao tentar executar todos os testes Python sem dependências
+foi `ModuleNotFoundError: No module named 'flask'`; os testes de integração
+também não alcançaram `localhost:5000`. O código e os testes correspondentes
+foram mantidos para a validação em Docker. Nenhuma validação de contêineres
+ou API foi inferida dos testes unitários.
+
+## Validação no Docker (24/11/2026)
+
+- `docker compose up -d --build`: usuário informou que os serviços iniciaram.
+- Interface em `http://localhost:8080`: aberta e verificada com o exemplo de
+  `if/else`, exibindo 16 tokens e AST; com `resultado = 10 + 5 * 2`, a AST
+  mostrou a multiplicação como filha da adição; com `x = (10 + )`, exibiu erro
+  sintático na linha 1, coluna 11 e manteve a página funcional.
+- `docker compose exec backend python -m unittest discover -s tests -p
+  "test_*.py" -v`: usuário informou resultado `OK`. O número total de testes
+  do contêiner não foi fornecido, portanto não é registrado aqui.
+- `node --test frontend/tests/script.test.cjs`: 10 testes aprovados.
+
+O comando Docker não pôde ser executado pelo ambiente automatizado porque o
+acesso ao socket do Docker foi negado; a execução dos testes no contêiner foi
+confirmada pelo relato do usuário. Commit e envio ao GitHub ainda pendentes.

@@ -12,7 +12,7 @@
     <div class="container">
 
         <h1>CompilaRef</h1>
-        <p>Software educacional para o ensino de análise léxica.</p>
+        <p>Software educacional para o ensino de análise léxica e sintática.</p>
         <p><strong>Linguagem:</strong> Python simplificado</p>
 
         <hr>
@@ -25,11 +25,13 @@
             <option value="1">Exemplo 1 - Atribuição</option>
             <option value="2">Exemplo 2 - Operação aritmética</option>
             <option value="3">Exemplo 3 - Expressão com parênteses</option>
+            <option value="4">Exemplo 4 - Condicional com bloco</option>
         </select>
 
         <label for="codigo">Digite seu código:</label>
-        <textarea id="codigo" rows="10"
+        <textarea id="codigo" rows="10" maxlength="10000"
                   placeholder="Digite seu código Python aqui..."></textarea>
+        <p>Limite: 10.000 caracteres.</p>
 
         <button id="analisar" type="button">
             Analisar código
@@ -80,6 +82,17 @@
 <section id="secao-erros" hidden>
     <h3>Erros léxicos</h3>
     <ul id="lista-erros"></ul>
+</section>
+
+<section aria-labelledby="titulo-sintatico">
+    <h2 id="titulo-sintatico">Análise sintática e AST</h2>
+    <p>O parser organiza os tokens de acordo com a gramática. A árvore sintática abstrata (AST) mostra as construções e suas relações, omitindo detalhes como parênteses.</p>
+    <p id="estado-sintatico" aria-live="polite">Nenhuma análise sintática realizada.</p>
+    <div id="arvore-ast" aria-label="Árvore sintática abstrata"></div>
+    <section id="secao-erros-sintaticos" hidden>
+        <h3>Erros sintáticos</h3>
+        <ul id="lista-erros-sintaticos"></ul>
+    </section>
 </section>
 
 <h3>Código enviado</h3>
